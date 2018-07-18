@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.0/angular.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <div class="container "ng-app="convertorApp" ng-controller="convertorCtrl">
+      <!-- <input ng-model="inputQuantity" type="text"> -->
+      <number-only-input></number-only-input>
+      <!-- <input ng-model="inputQuantity"  -->
+      <select ng-options="option.name for option in selections.availableOptions" ng-model="selections.model">
+      </select>
+
+      Cake Flour {{convert()}}
+    </div>
+
+    <script>
+    var app = angular.module('convertorApp', []);
+    app.controller('convertorCtrl', function($scope){
+      $scope.selections = {
+        model: null,
+        availableOptions: [
+          {quantity: 16, unit:'tbsp', dec: 0, name: 'cup'},
+          {quantity: 1, unit: 'tbsp', dec: 0, name: 'tablespoon'},
+          {quantity: 1, unit: 'g', dec: 2, name: 'gram'}
+        ]
+      };
+
+      $scope.convert = function(){
+        if (!$scope.selections.model || !$scope.inputQuantity) return;
+        var convertedResult = {apFlour: 0, apUnit: $scope.selections.model.unit, cStarch: 0, cUnit: $scope.selections.model.unit};
+        convertedResult.apFlour = ($scope.inputQuantity * $scope.selections.model.quantity * .875).toFixed($scope.selections.model.dec);
+        convertedResult.cStarch = ($scope.inputQuantity * $scope.selections.model.quantity - convertedResult.apFlour).toFixed($scope.selections.model.dec);
+
+        if ($scope.selections.model.unit != 'g'){
+          if (convertedResult.apFlour > 16) {
+            convertedResult.apFlour = (convertedResult.apFlour/16).toFixed(2);
+            convertedResult.apUnit = 'cup';
+          }
+          if (convertedResult.cStarch > 16) {
+            convertedResult.cStarch = (convertedResult.cStarch/16).toFixed(2);
+            convertedResult.cUnit = 'cup';
+          }
+        }
+
+        return ' = ' + convertedResult.apFlour + ' ' + convertedResult.apUnit + ' All Purpose Flour + ' +
+          convertedResult.cStarch + ' ' + convertedResult.cUnit + ' corn starch';
+      }
+    });
+
+    app.directive('numberOnlyInput', function(){
+      return {
+        restrict: 'EA',
+        template: '<input ng-model="inputQuantity">',
+        link: function(scope, elm, attrs, ctrl){
+          elm.on('keydown', function(event){
+            if (event.which == 64 || event.which == 16){
+              return false;
+            } else if (event.which >= 48 && event.which <= 57){
+              // allow numbers
+              return true;
+            } else if (event.which >= 96 && event.which <= 105){
+              //allow numpad numbers
+              return true;
+            } else if ([8, 13, 27, 37, 38, 39, 40].indexOf(event.which) > -1) {
+              // allow backspace, enter, escape, arrows
+              return true;
+            } else {
+              event.preventDefault();
+              return false;
+            }
+          });
+        }
+      }
+    });
+    </script>
+  </body>
+</html>
